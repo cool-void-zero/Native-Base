@@ -1,36 +1,47 @@
-import { NativeBaseProvider, FormControl, Stack, Input, WarningOutlineIcon, Text, Box, Button } from "native-base";
-// import { FormControl } from "native-base/lib/typescript/components/composites";
+import { 
+  NativeBaseProvider, 
+  Text, Box, 
+} from "native-base";
+import { RNCamera } from "react-native-camera";
 
 export default function App() {
+  const showDetectCode = (e) => {
+    alert(`Barcode value is ${e.data}, type is ${e.type}`);
+  }
+
   return (
     <NativeBaseProvider>
-      <Box flex={1} bg="#fff" alignItems="center" justifyContent="center">
-        <FormControl>
-          <Stack mx="4">
-            <FormControl.Label>Password</FormControl.Label>
-            <Input type="password" defaultValue="12345" placeholder="password" />
-            <FormControl.HelperText>
-              Must be atleast 6 characters.
-            </FormControl.HelperText>
-            <FormControl.ErrorMessage leftIcon={<WarningOutlineIcon size="xs" />}>
-              Atleast 6 characters are required.
-            </FormControl.ErrorMessage>
-          </Stack>
-        </FormControl>
+      <RNCamera 
+        ref={ref => {
+          this.camera = ref;
+        }}
+        style={{
+          flex: 0.8,
+          width: '100%',
+        }}
+
+        androidCameraPermissionOptions={{
+          title: 'Permission to use camera',
+          message: 'We need your permission to use your camera',
+          buttonPositive: 'Ok',
+          buttonNegative: 'Cancel',
+        }}
+
+        androidRecordAudioPermissionOptions={{
+          title: 'Permission to use audio',
+          message: 'We need your permission to use your audio for record',
+          buttonPositive: 'Ok',
+          buttonNegative: 'Cancel',
+        }}
+
+        onBarCodeRead={showDetectCode}
+
+        >
+      </RNCamera>
+      
+      <Box flex={0.2} bg="#fff" alignItems="center" justifyContent="center">
+        <Text>Scan QR or bar code</Text>
       </Box>
     </NativeBaseProvider>
   )
-  
-  /*
-  return (
-    <NativeBaseProvider>
-      <Box flex={1} bg="#fff" alignItems="center" justifyContent="center">
-        <Text>Open up App.js to start working on your app!</Text>
-        <Button shadow={3} onPress={() => alert("hello world")}>
-          Click me
-        </Button>
-      </Box>
-    </NativeBaseProvider>
-  )
-  */
 }
