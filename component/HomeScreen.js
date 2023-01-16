@@ -39,8 +39,8 @@ export default function HomeScreen({ navigation }){
     */
     const getMainList = async() => {
         return new Promise((resolve, reject) => {
-            let url = `http://192.168.80.140:1111/stock-check-main`;
-            // let url = `http://greenstem.dyndns.org:1111/stock-check-main`;
+            // let url = `http://192.168.80.140:1111/stock-check-main`;
+            let url = `http://greenstem.dyndns.org:1111/stock-check-main`;
 
             fetch(url)
                 .then(res => res.json())
@@ -60,8 +60,8 @@ export default function HomeScreen({ navigation }){
      */
     const getStockList = (doc_no) => {
         return new Promise((resolve, reject) => {
-            let url =  `http://192.168.80.140:1111/stock-check-detail?doc_no=${doc_no}`;
-            // let url =  `http://greenstem.dyndns.org:1111/stock-check-detail?doc_no=${doc_no}`;
+            // let url =  `http://192.168.80.140:1111/stock-check-detail?doc_no=${doc_no}`;
+            let url =  `http://greenstem.dyndns.org:1111/stock-check-detail?doc_no=${doc_no}`;
 
             fetch(url)
                 .then(res => res.json())
@@ -81,9 +81,14 @@ export default function HomeScreen({ navigation }){
             let list = await getStockList(doc_no);
             await AsyncStorage.setItem("selected_doc", doc_no);
             
-            navigation.navigate("Check", {
-                selected_doc: doc_no, 
-                stock_list: list 
+            navigation.navigate("StackCheck", {
+                screen: "Check", 
+                params: {
+                    selected_doc: doc_no, 
+                    stock_list: list, 
+                    detected_code: "", 
+                    input_quantity: 0, 
+                }
             });
         }
         catch(err){

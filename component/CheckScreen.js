@@ -8,15 +8,11 @@ import {
     //  Item Display
     Heading, Text, Input, Icon, IconButton, Button, 
     //  Effect React
-    Stagger, Actionsheet, useDisclose, useToast 
+    FormControl, Stagger, useDisclose, useToast, Pressable 
 } from 'native-base';
 import ToastAlert from '../component/ToastAlert';
-
-//  Plugin Scan QR Code
-import { NavigationContainer } from '@react-navigation/native';
-import { createStackNavigator } from '@react-navigation/stack';
-import ScanCode from '../component/ScanCode';
-
+import { useState, useRef } from 'react';
+import { TextInput } from 'react-native';
 
 export default function CheckScreen({ route, navigation }){
     /*
@@ -35,8 +31,8 @@ export default function CheckScreen({ route, navigation }){
     */
     const changeQuantity = (code, qty_str) => {
         let qty = Number(qty_str);
-        let url = `http://192.168.80.140:1111/update-quantity?document_no=${selected_doc}&stock_code=${code}&quantity=${qty}`;
-        // let url = `http://greenstem.dyndns.org:1111/update-quantity?document_no=${selected_doc}&stock_code=${code}&quantity=${qty}`;
+        // let url = `http://192.168.80.140:1111/update-quantity?document_no=${selected_doc}&stock_code=${code}&quantity=${qty}`;
+        let url = `http://greenstem.dyndns.org:1111/update-quantity?document_no=${selected_doc}&stock_code=${code}&quantity=${qty}`;
 
         for(let i=0; i<route.params.stock_list.length; i++)
             if(route.params.stock_list[i]['Stock Code'] === code){
@@ -64,31 +60,45 @@ export default function CheckScreen({ route, navigation }){
         }
     }
     
-    let { selected_doc, stock_list } = route.params;
+    let { selected_doc, stock_list, detected_code, input_quantity } = route.params;
+    const [stock_data, setStockData] = useState(route.params.stock_list);
+    const code_list = stock_list.map(obj => obj["Stock Code"]) || [];
     const { isOpen, onToggle } = useDisclose();
     const toast = useToast();
-    
-    /*
-        build-up stack to Scan QR Screen and back;
-    
-    const Stack = createStackNavigator();
-    const sub_stack = () => {
-        return (
-            <NavigationContainer>
-                <Stack.Navigator initialRouteName="Scan">
-                    <Stack.Screen name="Scan" component={ScanCode} />
-                </Stack.Navigator>
-            </NavigationContainer>
-        );
-    }
-    */
-    
-    
-    
 
+    const [focus_item, setFocusItem] = useState({
+        code: "", 
+        index: -1, 
+    });
+    let inputQuantity = useRef(0);
+    
+    const focusInputQuantity = ({code, index}) => {
+		inputQuantity.current.focus();
+        
+        setFocusItem({
+            code: code, 
+            index: index
+        });
+	}
+
+    // useEffect(() => {
+    //     alert(`useEffect`);
+
+        // if(detected_code !== ""){
+        //     for(let i=0; i<route.params.stock_list.length; i++)
+        //         if(route.params.stock_list[i]['Stock Code'] === detected_code){
+        //             route.params.stock_list[i]['Actual Qty'] = input_quantity;
+        //             break;
+        //         }
+        // }
+    // }, []);
+    
 
     return (
         <VStack flex={1} space={4} px={5} alignContent="center" alignItems="center">
+            <Text bold>Detected Code: {detected_code}</Text>
+            <Text bold>Input Quantity: {input_quantity}</Text>
+            
             {
                 /* Table Data List */
             }
@@ -99,29 +109,53 @@ export default function CheckScreen({ route, navigation }){
                     <Heading flex={4} size="sm">Stock Code</Heading>
                     <Heading flex={2} size="sm">Actual Qty</Heading>
                 </HStack>
+                <FormControl>
             { 
                 /* Body */
+
+                /*
+                <Input flex={2} h={8} pr={5} textAlign="right" placeholder="Actual Qty"
+                    onChangeText={new_qty => changeQuantity(row["Stock Code"], new_qty)} 
+                    value={route.params.stock_list[i]["Actual Qty"]} />
+                */
 
                 (selected_doc === "")?
                     <Text size="lg" bold>
                         Please select your checking list first, before go in this screen.
                     </Text>:
-                    stock_list.map((row, i) => {
-                        
+                    // route.params.stock_list.map((row, i) => {
+                    stock_data.map((row, i) => {
                         return (
-                            <HStack w="100%" key={i}  alignContent="center" alignItems="center">
+                            <HStack w="100%" key={i} mt={2} alignContent="center" alignItems="center">
                                 <Text flex={1}>{row["Line"]}</Text>
                                 <Text flex={4}>{row["Stock Code"]}</Text>
-                                <Input flex={2} h={8} pr={5} textAlign="right" placeholder="Actual Qty"
-                                    onChangeText={new_qty => changeQuantity(row["Stock Code"], new_qty)} 
-                                    value={row["Actual Qty"]} />
+                                
+                                <Pressable flex={2} onPress={() => focusInputQuantity({
+                                    code: row["Stock Code"], 
+                                    index: i, 
+                                })}>
+                                    <Text>{ row["Actual Qty"] }</Text>
+                                </Pressable>
+
                             </HStack>
                         )
                     })
             }
+                </FormControl>
             </VStack>
             
             <Button w="50%" mt={5+5} px={5} fontWeight="bold">Submit</Button>
+            {/* <Text>Focus Code: {focus_item.code}, Focus Index: {focus_item.index}</Text> */}
+            <TextInput style={{ backfaceVisibility: "hidden" }} keyboardType={"numeric"} ref={inputQuantity} 
+                defaultValue={0} 
+                
+                onChangeText={new_qty => {
+                    let arr = [...route.params.stock_list];
+                    arr[focus_item.index]["Actual Qty"] = new_qty;
+
+                    setStockData(arr);
+                    changeQuantity(focus_item.code, new_qty);
+                }} />
             
 
             {
@@ -160,7 +194,18 @@ export default function CheckScreen({ route, navigation }){
                     }}>
                     
                     <IconButton mb="4" bg="teal.400" colorScheme="teal" borderRadius="full" 
-                        
+                        onPress={() => {
+                            if(code_list.length)
+                                navigation.navigate("Scan", {
+                                    ...route.params, 
+                                });
+                            else
+                                toast.show({
+                                    description: "Not Stock Code Exist."
+                                });
+                            
+                            onToggle();
+                        }}
                         icon={<Icon as={MaterialIcons} name="qr-code-scanner" size="6" _dark={{ color: "warmGray.50" }} color="warmGray.50" />} />
                     <IconButton mb="4"bg="red.500" colorScheme="red" borderRadius="full" 
                         icon={<Icon as={MaterialIcons} name="photo-library" size="6" _dark={{ color: "warmGray.50" }} color="warmGray.50" />} />
