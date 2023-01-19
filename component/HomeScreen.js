@@ -12,6 +12,8 @@ import {
 } from 'native-base';
 //  Expo Includes Icon
 import { FontAwesome } from '@expo/vector-icons'; 
+//  Custom Backend API
+import { getMainListAPI, getStockListAPI } from './Api';
 
 export default function HomeScreen({ navigation }){
     /*
@@ -34,51 +36,11 @@ export default function HomeScreen({ navigation }){
         }
     }
 
-    /*
-        Get Server Database "SC_Check_Pre_Main" Data
-    */
-    const getMainList = async() => {
-        return new Promise((resolve, reject) => {
-            // let url = `http://192.168.80.140:1111/stock-check-main`;
-            let url = `http://greenstem.dyndns.org:1111/stock-check-main`;
-
-            fetch(url)
-                .then(res => res.json())
-                .then(json => resolve(json))
-                .catch(err => {
-                    console.log(err);
-                    reject(err);
-                });
-        });
-    }
-
-    /**
-     * Get checking of stock code list
-     * 
-     * @param {String} doc_no ([Document No])
-     * 
-     */
-    const getStockList = (doc_no) => {
-        return new Promise((resolve, reject) => {
-            // let url =  `http://192.168.80.140:1111/stock-check-detail?doc_no=${doc_no}`;
-            let url =  `http://greenstem.dyndns.org:1111/stock-check-detail?doc_no=${doc_no}`;
-
-            fetch(url)
-                .then(res => res.json())
-                .then(json => resolve(json))
-                .catch(err => {
-                    console.log(err);
-                    reject(err);
-                });
-        });
-        
-    }
-
     const selectDoc = async(doc_no) => {
         setSelectedDoc(doc_no);
 
         try{
-            let list = await getStockList(doc_no);
+            let list = await getStockListAPI(doc_no);
             await AsyncStorage.setItem("selected_doc", doc_no);
             
             navigation.navigate("StackCheck", {
@@ -103,12 +65,11 @@ export default function HomeScreen({ navigation }){
     let [search_field, setSearchField] = useState("");
     //  Data List of "SC_Check_Pre_Main" ([Status] = 'NS') not start
     let [main_list, setMainList] = useState([]);
-    // let [main_list, setMainList] = useState([{"Document No":"SCCHECK000001","Transaction Type":"SCCHECK","Document Date":"2023-01-12T09:30:28.780Z","Issue Time":"Jan 12 2023  9:30AM","Status":"NS","Location":"L1","Bin / Shelf No":"1A-1-01-02-01","Issue By":"CO","Taken By":"","Check By":""},{"Document No":"SCCHECK000002","Transaction Type":"SCCHECK","Document Date":"2023-01-12T09:33:07.377Z","Issue Time":"Jan 12 2023  9:33AM","Status":"NS","Location":"L1","Bin / Shelf No":"1A-1-01-02-02","Issue By":"CO","Taken By":"","Check By":""},{"Document No":"SCCHECK000003","Transaction Type":"SCCHECK","Document Date":"2023-01-12T09:33:07.377Z","Issue Time":"Jan 12 2023  9:33AM","Status":"NS","Location":"L1","Bin / Shelf No":"1A-1-01-02-03","Issue By":"GREEN","Taken By":"","Check By":""}]);
     let [selected_doc, setSelectedDoc] = useState(null);
 
     useEffect(() => {
         getLocalStorage().then(val => setSearchField(val));
-        getMainList()
+        getMainListAPI()
             .then(json_data => setMainList(json_data))
             .catch(err => {
                 if(err){

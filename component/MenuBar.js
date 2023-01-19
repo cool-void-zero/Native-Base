@@ -5,6 +5,7 @@ import { FontAwesome, MaterialCommunityIcons, Ionicons } from '@expo/vector-icon
 import HomeScreen from '../component/HomeScreen';
 import CheckScreen from '../component/CheckScreen';
 import ScanCode from '../component/ScanCode';
+import TakeImage from '../component/TakeImage';
 import SupportScreen from '../component/SupportScreen';
 
 /*
@@ -26,8 +27,6 @@ export default function MenuBar(){
         let check_params = {
             selected_doc: "", 
             stock_list: [], 
-            selected_doc: "SCCHECK000002", 
-            stock_list: [{"Document No":"SCCHECK000002","Transaction Type":"SCCHECK","Line":1,"Stock Code":"0000-20018","Location":"TC","Bin / Shelf No":"1A-1-01-02-02","Computed Qty":10,"Actual Qty":15},{"Document No":"SCCHECK000002","Transaction Type":"SCCHECK","Line":2,"Stock Code":"0000-20020B","Location":"TC","Bin / Shelf No":"1A-1-01-02-02","Computed Qty":10,"Actual Qty":1}], 
             detected_code: "", 
             input_quantity: 0, 
         }
@@ -36,6 +35,7 @@ export default function MenuBar(){
             <Stack.Navigator screenOptions={{ headerShown: false }}>
                 <Stack.Screen name="Check" component={CheckScreen} initialParams={ check_params } />
                 <Stack.Screen name="Scan" component={ScanCode} options={{ headerShown: false }} />
+                <Stack.Screen name="Image" component={TakeImage} />
             </Stack.Navigator>
         );
     }

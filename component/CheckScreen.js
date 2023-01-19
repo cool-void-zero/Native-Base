@@ -11,7 +11,7 @@ import {
     FormControl, Stagger, useDisclose, useToast, Pressable 
 } from 'native-base';
 import ToastAlert from '../component/ToastAlert';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { TextInput } from 'react-native';
 
 export default function CheckScreen({ route, navigation }){
@@ -26,43 +26,8 @@ export default function CheckScreen({ route, navigation }){
         return local_doc;
     }
 
-    /*
-        Change Quantity
-    */
-    const changeQuantity = (code, qty_str) => {
-        let qty = Number(qty_str);
-        // let url = `http://192.168.80.140:1111/update-quantity?document_no=${selected_doc}&stock_code=${code}&quantity=${qty}`;
-        let url = `http://greenstem.dyndns.org:1111/update-quantity?document_no=${selected_doc}&stock_code=${code}&quantity=${qty}`;
-
-        for(let i=0; i<route.params.stock_list.length; i++)
-            if(route.params.stock_list[i]['Stock Code'] === code){
-                route.params.stock_list[i]['Actual Qty'] = qty;
-                break;
-            }
-        
-        if(typeof(qty) === "number" && qty > 0){
-            let toast_options = {
-                title: `Execute Update Quantity of "${code}"`,
-                variant: "left-accent",
-                isClosable: true 
-            }
-            
-            const closeToastAlert = (id) => toast.close(id);
-
-            fetch(url)
-                .then(res => res.json())
-                .then(json => toast.show({
-                    render: () => <ToastAlert id={0} {...toast_options} description={json['status_msg']} close={closeToastAlert} />, 
-                }))
-                .catch(err => toast.show({
-                    render: () => <ToastAlert id={0} {...toast_options} description={err} close={closeToastAlert} />, 
-                }));
-        }
-    }
-    
     let { selected_doc, stock_list, detected_code, input_quantity } = route.params;
     const [stock_data, setStockData] = useState(route.params.stock_list);
-    const code_list = stock_list.map(obj => obj["Stock Code"]) || [];
     const { isOpen, onToggle } = useDisclose();
     const toast = useToast();
 
@@ -81,18 +46,12 @@ export default function CheckScreen({ route, navigation }){
         });
 	}
 
-    // useEffect(() => {
-    //     alert(`useEffect`);
-
-        // if(detected_code !== ""){
-        //     for(let i=0; i<route.params.stock_list.length; i++)
-        //         if(route.params.stock_list[i]['Stock Code'] === detected_code){
-        //             route.params.stock_list[i]['Actual Qty'] = input_quantity;
-        //             break;
-        //         }
-        // }
-    // }, []);
-    
+    /*
+        refer route.params variable, if the value changed will effect this component
+    */
+    useEffect(() => {
+        setStockData(route.params.stock_list);
+    }, [route.params])
 
     return (
         <VStack flex={1} space={4} px={5} alignContent="center" alignItems="center">
@@ -112,13 +71,6 @@ export default function CheckScreen({ route, navigation }){
                 <FormControl>
             { 
                 /* Body */
-
-                /*
-                <Input flex={2} h={8} pr={5} textAlign="right" placeholder="Actual Qty"
-                    onChangeText={new_qty => changeQuantity(row["Stock Code"], new_qty)} 
-                    value={route.params.stock_list[i]["Actual Qty"]} />
-                */
-
                 (selected_doc === "")?
                     <Text size="lg" bold>
                         Please select your checking list first, before go in this screen.
@@ -154,7 +106,6 @@ export default function CheckScreen({ route, navigation }){
                     arr[focus_item.index]["Actual Qty"] = new_qty;
 
                     setStockData(arr);
-                    changeQuantity(focus_item.code, new_qty);
                 }} />
             
 
@@ -195,7 +146,7 @@ export default function CheckScreen({ route, navigation }){
                     
                     <IconButton mb="4" bg="teal.400" colorScheme="teal" borderRadius="full" 
                         onPress={() => {
-                            if(code_list.length)
+                            if(stock_data.length)
                                 navigation.navigate("Scan", {
                                     ...route.params, 
                                 });
@@ -208,6 +159,7 @@ export default function CheckScreen({ route, navigation }){
                         }}
                         icon={<Icon as={MaterialIcons} name="qr-code-scanner" size="6" _dark={{ color: "warmGray.50" }} color="warmGray.50" />} />
                     <IconButton mb="4"bg="red.500" colorScheme="red" borderRadius="full" 
+                        onPress={() => navigation.navigate("Image")}
                         icon={<Icon as={MaterialIcons} name="photo-library" size="6" _dark={{ color: "warmGray.50" }} color="warmGray.50" />} />
                     </Stagger>
                 </Box>
@@ -221,8 +173,6 @@ export default function CheckScreen({ route, navigation }){
             {
                 /* End of Floating Sub Menu */
             }
-
-
         </VStack>
     )
 }
