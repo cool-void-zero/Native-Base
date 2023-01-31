@@ -50,9 +50,15 @@ export default function ScanCode({ route, navigation }){
 		else{
 			checkStockMasterAPI(code)
 				.then(json => {
-					setDetectCode(code);
-					setDetectType(e.type);
-					setIsDialogOpen(true);
+					const { status, status_message } = json;
+
+					if(status === 1){
+						setDetectCode(code);
+						setDetectType(e.type);
+						setIsDialogOpen(true);
+					}
+					else
+						alert(status_message);
 				})
 				.catch(err => alert(err));
 		}
